@@ -1,5 +1,7 @@
 # dryswap
 
+(English: [README.en.md](README.en.md))
+
 V2 型の DEX のプールの送金・交換を、**仮の条件で送信せずに**試す小さい道具。
 
 公開 RPC の `eth_call` と state override だけを使う。署名も、鍵も、ウォレットも、ガス代の支払いも要らない。Python 3.8 以上、標準ライブラリだけ、1ファイル。
