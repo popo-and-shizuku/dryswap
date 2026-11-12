@@ -206,6 +206,17 @@ def decode_aggregate3(hexdata, n):
     return out
 
 
+def check_override_precheck(ok, h):
+    """コードを載せた仮の持ち主に、空の aggregate3 を呼んだ返事を調べる。正しい「空の配列」でなければ、この RPC では試せないとして止める。
+    原因は決めつけない（state override に対応していない、黙って無視する、返事が壊れている、など）。"""
+    try:
+        if ok and decode_aggregate3(h, 0) == []:
+            return
+    except Stop:
+        pass
+    raise Stop('state override の事前確認に失敗した（コードを載せた住所から、正しい空の返事が返らない）。この RPC では試せない。')
+
+
 def revert_text(data):
     if len(data) >= 68 and data[:4].hex() == '08c379a0':   # Error(string)
         ln = int.from_bytes(data[36:68], 'big')
@@ -227,6 +238,9 @@ class Sim:
         self.mc3_code = code
         self.mc3_sha256 = hashlib.sha256(hex_bytes(code)).hexdigest()
         self.override = {SIM_USER: {'code': code}}
+        # state override が効いているかを先に確かめる。黙って無視する RPC だと、あとの残高の照合が全部はずれて、原因を取り違える
+        ok, h = rpc.call(SIM_USER, encode_aggregate3([]), self.block, self.override)
+        check_override_precheck(ok, h)
 
     def view(self, to, data):
         ok, h = self.rpc.call(to, data, self.block)
